@@ -63,6 +63,7 @@
 #include "basic_actions/neck_turn_to_ball_or_scan.h"
 #include "basic_actions/view_synch.h"
 #include "basic_actions/kick_table.h"
+#include "basic_actions/bhv_straight_dribble.h"
 
 #include <rcsc/formation/formation.h>
 #include <rcsc/player/intercept_table.h>
@@ -206,7 +207,6 @@ SamplePlayer::initImpl( CmdLineParser & cmd_parser )
                   << config().configDir() << "/kick-table]"
                   << std::endl;
     }
-
     return true;
 }
 
@@ -354,7 +354,6 @@ SamplePlayer::actionImpl()
     // update action chain
     //
     ActionChainHolder::instance().update( world() );
-
 
     //
     // create current role
@@ -629,7 +628,6 @@ SamplePlayer::doPreprocess()
     // check queued intention
     // check simultaneous kick
 
-    const ServerParam & SP = ServerParam::i();
     const WorldModel & wm = this->world();
 
     dlog.addText( Logger::TEAM,
@@ -698,107 +696,13 @@ SamplePlayer::doPreprocess()
     this->setViewAction( new View_Tactical() );
 
     //
-    // server prctice α
+    // strraight dribble
     //
-    Vector2D player_pos = wm.self().pos();
-    Vector2D ball_pos = wm.ball().pos();
-    Vector2D player_vel = wm.self().vel();
-    Vector2D ball_vel = wm.ball().vel();
-    Vector2D dash_vel ( wm.self().playerType().dashPowerRate() * SP.maxDashPower(), 0);
-    static int s_t = 0;
-    constexpr double kickable_area_rate = 0.5;
-    constexpr int dash_cycle = 2;
-
-    if ( wm.gameMode().type() == GameMode::PlayOn)
-    {   
-
-        Vector2D reach_player_pos = player_pos + player_vel;
-
-        for ( int i = 0; i < dash_cycle; i++)
-        {
-            player_vel.x = player_vel.x * wm.self().playerType().playerDecay() + dash_vel.x;
-            reach_player_pos.x = reach_player_pos.x + player_vel.x;
-        }
-
-        reach_player_pos.x = reach_player_pos.x + wm.self().playerType().playerSize() + ServerParam::i().ballSize() + wm.self().playerType().kickableArea() * kickable_area_rate;
-
-        double first_ball_vel = SP.firstBallSpeed( wm.ball().pos().dist(reach_player_pos),
-                                                   dash_cycle + 1
-        );
-
-        double ball_accel = first_ball_vel - ball_vel.x;
-
-        AngleDeg dash_angle = (wm.ball().pos() - wm.self().pos()).th();
-        double power = ball_accel / wm.self().kickRate();
-
-        // for ( int i = 0; i < dash_cycle; i++ )
-        // {
-        //     player_vel = player_vel * wm.self().playerType().playerDecay() + dash_vel;
-        //     reach_player_pos = reach_player_pos + player_vel
-        // }
-
-        // reach_player_pos = reach_player_pos + wm.self().playerType().playerSize() + ServerParam::i().ballSize() + wm.self().playerType().kickableArea() * kickable_area_rate;
-
-        // AngleDeg dash_angle = (wm.ball().pos() - wm.self().pos()).th();
-
-        // double power = ball_accel / wm.self().kickRate();
-
-        std::cerr << "Server Practice : ["
-                  << s_t
-                  << "]"
-                  << std::endl;
-
-        dlog.addText( Logger::WORLD,
-                  "Server Practice=(%lf)",
-                  s_t);
-
-        if ( s_t > 0 )
-        {            
-            if ( s_t % dash_cycle == 0)
-            {
-                if ( doKick( power, 0 ) )
-                {
-                    s_t++;
-                    return true;
-                }
-                else
-                {
-                    doDash( SP.maxDashPower(), dash_angle );
-                    return true;
-                }
-            }
-
-            doDash( SP.maxDashPower(), dash_angle );
-            s_t++;
-            return true;
-        }
-
-        doDash( SP.maxDashPower(), dash_angle );
-
-        if ( doKick( power, 0 ) )
-        {   
-            s_t++;
-            return true;  
-        }   
-        return true;                     
+    if ( wm.gameMode().type() == GameMode::PlayOn )
+    {
+        Bhv_StraightDribble().execute( this );
+        return true;
     }
-
-    // if ( wm.gameMode().type() == GameMode::PlayOn)
-    // (
-    //         {
-    //             if ( doDash( 100, dash_angle ) )
-    //             {   
-    //                 dlog.addText( Logger::TEAM,
-    //                             __FILE__": dash_angle = %f",
-    //                             dash_angle.degree() );
-    //                 if ( doKick( power, 0 ) )
-    //                 {
-    //                     return true;
-    //                 }
-    //                 return true;
-    //             }   
-    //         }
-    // )
 
     //
     // check shoot chance

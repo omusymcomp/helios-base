@@ -55,32 +55,36 @@ Bhv_StraightDribble::execute( PlayerAgent * agent )
     Vector2D player_pos = wm.self().pos();
     Vector2D player_vel = wm.self().vel();
     Vector2D ball_vel = wm.ball().vel();
-    Vector2D dash_vel ( wm.self().playerType().dashPowerRate() * SP.maxDashPower(), 0);
-    
-    static int s_t = 0;
-    constexpr double kickable_area_rate = 0.5;
-    constexpr int dash_cycle = 2;
+    const Vector2D goal( SP.pitchHalfLength(), 0.0);
+    AngleDeg goal_angle = ( goal - wm.self().pos() ).th();
+    AngleDeg dash_angle = (wm.ball().pos() - wm.self().pos()).th();
+    double accel_mag = wm.self().dashRate() * SP.dashDirRate( dash_angle.degree() ) * SP.maxDashPower();
+    Vector2D dash_accel = Vector2D::polar2vector( accel_mag, dash_angle );
 
-      
+    static int s_t = 0;
+    constexpr double kickable_area_rate = 0.1;
+    constexpr int dash_cycle = 4;
 
     Vector2D reach_player_pos = player_pos + player_vel;
 
     for ( int i = 0; i < dash_cycle; i++)
     {
-        player_vel.x = player_vel.x * wm.self().playerType().playerDecay() + dash_vel.x;
-        reach_player_pos.x = reach_player_pos.x + player_vel.x;
+        player_vel = player_vel * wm.self().playerType().playerDecay() + dash_accel;
+        reach_player_pos = reach_player_pos + player_vel;
     }
 
     reach_player_pos.x = reach_player_pos.x + wm.self().playerType().playerSize() + ServerParam::i().ballSize() + wm.self().playerType().kickableArea() * kickable_area_rate;
+    reach_player_pos.y = reach_player_pos.y + wm.self().playerType().playerSize() + ServerParam::i().ballSize() + wm.self().playerType().kickableArea() * kickable_area_rate;
 
-    double first_ball_vel = SP.firstBallSpeed( wm.ball().pos().dist(reach_player_pos),
-                                                dash_cycle + 1
+    double first_ball_mag = SP.firstBallSpeed( wm.ball().pos().dist(reach_player_pos),
+                                                dash_cycle + 1 
     );
+    
+    Vector2D first_ball_vel = Vector2D::polar2vector( first_ball_mag, goal_angle ); 
 
-    double ball_accel = first_ball_vel - ball_vel.x;
+    Vector2D ball_accel = first_ball_vel - ball_vel;
 
-    AngleDeg dash_angle = (wm.ball().pos() - wm.self().pos()).th();
-    double power = ball_accel / wm.self().kickRate();
+    double power = ball_accel.r() / wm.self().kickRate();
 
     // for ( int i = 0; i < dash_cycle; i++ )
     // {
@@ -107,7 +111,7 @@ Bhv_StraightDribble::execute( PlayerAgent * agent )
     {            
         if ( s_t % dash_cycle == 0)
         {
-            if ( agent->doKick( power, 0 ) )
+            if ( agent->doKick( power, goal_angle ) )
             {
                 s_t++;
                 return true;
@@ -126,7 +130,7 @@ Bhv_StraightDribble::execute( PlayerAgent * agent )
 
     agent->doDash( SP.maxDashPower(), dash_angle );
 
-    if ( agent->doKick( power, 0 ) )
+    if ( agent->doKick( power, goal_angle ) )
     {   
         s_t++;
         return true;  

@@ -28,8 +28,8 @@ Bhv_StraighDribble::execute( PlayerAgent * agent )
     const WorldModel & wm = agent->world();
     const ServerParam & SP = ServerParam::i();
 
-    constexpr int dash_cycle = 3;
-    constexpr double kickable_area_rate = 1.0;
+    constexpr int dash_cycle = 5;
+    constexpr double kickable_area_rate = 0.5;
 
     dlog.addText( Logger::ACTION,
                   __FILE__, ": Bhv_StraightDribble" );
@@ -40,11 +40,19 @@ Bhv_StraighDribble::execute( PlayerAgent * agent )
     dlog.addText( Logger::TEAM,
                   __FILE__": cycle: %d", s_cycle_after_kick );
 
+    if ( wm.self().isKickable() && dash_cycle + 1 <= s_cycle_after_kick )
+    {
+        if ( doTurn( agent ) )
+        {
+            return true;
+        }
+    }
+
     if ( wm.self().isKickable() && s_cycle_after_kick >= 1 + dash_cycle )
     {
-        const Vector2D after_player_pos = get_player_move_pos( agent, dash_cycle );
+        const Vector2D after_player_pos = getPlayerMovePos( agent, dash_cycle );
 
-        const Vector2D target_ball_pos = get_player_to_ball_margin( agent, after_player_pos, kickable_area_rate );
+        const Vector2D target_ball_pos = getPlayerToBallMargin( agent, after_player_pos, kickable_area_rate );
 
         const Vector2D their_goal_pos( SP.pitchLength() / 2.0, 0.0 );
         AngleDeg player_to_goal_angle = ( their_goal_pos - wm.ball().pos() ).dir() - wm.self().body();
@@ -59,7 +67,7 @@ Bhv_StraighDribble::execute( PlayerAgent * agent )
                       ( target_ball_pos - wm.self().pos() ).r(), first_ball_speed,
                       first_ball_vel.x, first_ball_vel.y );
 
-        debug_ball_move( wm.ball().pos(), first_ball_vel, dash_cycle );
+        debugBallMove( wm.ball().pos(), first_ball_vel, dash_cycle );
 
         if ( agent->doKick( kick_power, player_to_goal_angle ) )
         {
@@ -75,9 +83,38 @@ Bhv_StraighDribble::execute( PlayerAgent * agent )
 /*!
 
  */
+bool
+Bhv_StraighDribble::doTurn( PlayerAgent * agent )
+{
+    dlog.addText( Logger::TEAM,
+                  __FILE__": first kickable" );
+
+    const ServerParam & SP = ServerParam::i();
+    const WorldModel & wm = agent->world();
+    const Vector2D their_goal_pos( SP.pitchLength() / 2.0, 0.0 );
+
+    const Vector2D player_to_goal = their_goal_pos - wm.self().pos();
+    const AngleDeg player_to_goal_body_angle = player_to_goal.dir() - wm.self().body();
+
+    dlog.addText( Logger::TEAM,
+                  __FILE__": player_to_goal_body_angle = %.2f = %.2f - %.2f",
+                  player_to_goal_body_angle.degree(),
+                  player_to_goal.dir().degree(), wm.self().body().degree() );
+
+    if ( 5.0 < player_to_goal_body_angle.abs() )
+    {
+        return agent->doTurn( player_to_goal_body_angle );
+    }
+    return false;
+}
+
+/*-------------------------------------------------------------------*/
+/*!
+
+ */
 Vector2D
-Bhv_StraighDribble::get_player_move_pos( const PlayerAgent * agent,
-                                         const int move_cycle )
+Bhv_StraighDribble::getPlayerMovePos( const PlayerAgent * agent,
+                                      const int move_cycle )
 {
     const WorldModel & wm = agent->world();
     const ServerParam & SP = ServerParam::i();
@@ -119,12 +156,11 @@ Bhv_StraighDribble::get_player_move_pos( const PlayerAgent * agent,
 /*-------------------------------------------------------------------*/
 /*!
 
-
  */
 Vector2D
-Bhv_StraighDribble::get_player_to_ball_margin( const PlayerAgent * agent,
-                                               const Vector2D & after_player_pos,
-                                               const double kickable_area_rate )
+Bhv_StraighDribble::getPlayerToBallMargin( const PlayerAgent * agent,
+                                           const Vector2D & after_player_pos,
+                                           const double kickable_area_rate )
 {
     const WorldModel & wm = agent->world();
     const ServerParam & SP = ServerParam::i();
@@ -152,9 +188,9 @@ Bhv_StraighDribble::get_player_to_ball_margin( const PlayerAgent * agent,
 
  */
 void
-Bhv_StraighDribble::debug_ball_move( const Vector2D & init_ball_pos,
-                                     const Vector2D & init_ball_vel,
-                                     const int dash_cycle )
+Bhv_StraighDribble::debugBallMove( const Vector2D & init_ball_pos,
+                                   const Vector2D & init_ball_vel,
+                                   const int dash_cycle )
 {
     const ServerParam & SP = ServerParam::i();
     Vector2D ball_pos = init_ball_pos;

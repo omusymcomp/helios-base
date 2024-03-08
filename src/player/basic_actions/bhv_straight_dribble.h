@@ -24,14 +24,16 @@ public:
 
 private:
 
-    rcsc::Vector2D get_player_move_pos( const rcsc::PlayerAgent* agent,
-                                        const int dash_cycle );
+    bool doTurn( rcsc::PlayerAgent * agent );
 
-    rcsc::Vector2D get_player_to_ball_margin( const rcsc::PlayerAgent * agent,
+    rcsc::Vector2D getPlayerMovePos( const rcsc::PlayerAgent* agent,
+                                     const int dash_cycle );
+
+    rcsc::Vector2D getPlayerToBallMargin( const rcsc::PlayerAgent * agent,
                                               const rcsc::Vector2D & after_player_pos,
                                               const double kickable_area_rate );
 
-    void debug_ball_move( const rcsc::Vector2D & ball_pos,
+    void debugBallMove( const rcsc::Vector2D & ball_pos,
                           const rcsc::Vector2D & ball_vel,
                           const int dash_cycle );
 

@@ -56,6 +56,7 @@
 
 #include "basic_actions/basic_actions.h"
 #include "basic_actions/bhv_emergency.h"
+#include "basic_actions/bhv_straight_dribble.h"
 #include "basic_actions/body_go_to_point.h"
 #include "basic_actions/body_intercept.h"
 #include "basic_actions/body_kick_one_step.h"
@@ -226,7 +227,6 @@ SamplePlayer::actionImpl()
                   << this->audioSensor().trainerMessage() << ']'
                   << std::endl;
     }
-
 
     //
     // update strategy and analyzer
@@ -598,6 +598,13 @@ SamplePlayer::doPreprocess()
     //
 
     this->setViewAction( new View_Tactical() );
+    
+    // StraightDribble
+    // thisはこのファイル自身(sample_player = PlayerAgent)を表す
+    if ( Bhv_StraightDribble().execute( this ) )
+    {
+        return true;
+    }
 
     //
     // check shoot chance

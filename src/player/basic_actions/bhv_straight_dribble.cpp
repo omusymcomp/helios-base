@@ -194,11 +194,16 @@ Bhv_StraightDribble::execute( PlayerAgent * agent )
                   __FILE__ ": bodyAngle = %f", wm.self().body());
     std::cerr << "check3" << std::endl;
     std::cerr << "t=" << t << std::endl;
-    if( t >= 3 ){
-      double player_velocity = wm.self().vel().x;
+
+    double n_step = 3;
+
+    if( t >= n_step ){
+      double player_velocity = wm.self().vel().r();
       double player_maxDashAccel = wm.self().playerType().dashPowerRate() * ServerParam::i().maxDashPower();
       double player_decay = wm.self().playerType().playerDecay();
-      double player_distance = player_velocity+(player_velocity*player_decay+player_maxDashAccel)+((player_velocity*player_decay+player_maxDashAccel)*player_decay+player_maxDashAccel);
+      double player_total_distance = 0.0;
+
+      // double player_distance = player_velocity+(player_velocity*player_decay+player_maxDashAccel)+((player_velocity*player_decay+player_maxDashAccel)*player_decay+player_maxDashAccel);
       
       // Vector2D player_velocity = wm.self().vel();
 
@@ -209,10 +214,15 @@ Bhv_StraightDribble::execute( PlayerAgent * agent )
       
       // double player_decay = wm.self().playerType().playerDecay();
       // double player_distance = player_velocity + (player_velocity*player_decay+player_maxDashAccel) + ((player_velocity*player_decay+player_maxDashAccel)*player_decay+player_maxDashAccel) + wm.self().playerType().playerSize() + wm.self().kickRate();
+
+      for( int i = 0; i < n_step; i ++ ){
+        player_total_distance += player_velocity;
+        player_velocity = player_velocity * player_decay + player_maxDashAccel;
+      } 
       
       double initial_ball_vel = wm.ball().vel().r();
       // double ball_decay = ServerParam::i().ballDecay();
-      double first_ball_speed = ServerParam::i().firstBallSpeed(player_distance, 3);
+      double first_ball_speed = ServerParam::i().firstBallSpeed(player_total_distance, n_step);
 
       double kick_power = (first_ball_speed - initial_ball_vel) / wm.self().kickRate();
 

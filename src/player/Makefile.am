@@ -15,6 +15,7 @@ sample_player_SOURCES = \
 	basic_actions/bhv_emergency.cpp \
 	basic_actions/bhv_go_to_point_look_ball.cpp \
 	basic_actions/bhv_scan_field.cpp \
+	basic_actions/bhv_straight_dribble.cpp \
 	basic_actions/body_advance_ball2009.cpp \
 	basic_actions/body_clear_ball2009.cpp \
 	basic_actions/body_dribble2008.cpp \
@@ -128,6 +129,7 @@ noinst_HEADERS = \
 	basic_actions/bhv_neck_body_to_ball.h \
 	basic_actions/bhv_neck_body_to_point.h \
 	basic_actions/bhv_scan_field.h \
+	basic_actions/bhv_straight_dribble.h \
 	basic_actions/body_advance_ball.h \
 	basic_actions/body_advance_ball2009.h \
 	basic_actions/body_clear_ball.h \

@@ -40,7 +40,7 @@ Bhv_StraighDribble::execute( PlayerAgent * agent )
     dlog.addText( Logger::TEAM,
                   __FILE__": cycle: %d", s_cycle_after_kick );
 
-    if ( s_cycle_after_kick >= 1 + dash_cycle && wm.self().isKickable() )
+    if ( wm.self().isKickable() && s_cycle_after_kick >= 1 + dash_cycle )
     {
         const Vector2D after_player_pos = get_player_move_pos( agent, dash_cycle );
 
@@ -126,13 +126,13 @@ Bhv_StraighDribble::get_player_to_ball_margin( const PlayerAgent * agent,
                                                const Vector2D & after_player_pos,
                                                const double kickable_area_rate )
 {
-    constexpr double must_margin = 0.1;
     const WorldModel & wm = agent->world();
     const ServerParam & SP = ServerParam::i();
+    const double must_margin = SP.ballSize();
 
-    const double base_margin = wm.self().playerType().playerSize() + SP.ballSize() + must_margin;
-    double margin = base_margin + ( wm.self().playerType().kickableArea() - must_margin - base_margin ) * kickable_area_rate;
-    margin = std::clamp( margin, base_margin, wm.self().playerType().kickableArea() - must_margin );
+    const double base_margin = wm.self().playerType().playerSize() + SP.ballSize();
+    double margin = base_margin + wm.self().playerType().kickableMargin() * kickable_area_rate;
+    margin = std::clamp( margin, base_margin + must_margin, wm.self().playerType().kickableArea() - must_margin );
 
     const Vector2D player_to_ball_margin = Vector2D::polar2vector( margin,
                                                                    ( after_player_pos - wm.self().pos() ).dir() );

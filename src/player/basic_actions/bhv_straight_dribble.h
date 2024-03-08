@@ -30,12 +30,12 @@ private:
                                      const int dash_cycle );
 
     rcsc::Vector2D getPlayerToBallMargin( const rcsc::PlayerAgent * agent,
-                                              const rcsc::Vector2D & after_player_pos,
-                                              const double kickable_area_rate );
+                                          const rcsc::Vector2D & after_player_pos,
+                                          const double kickable_area_rate );
 
     void debugBallMove( const rcsc::Vector2D & ball_pos,
-                          const rcsc::Vector2D & ball_vel,
-                          const int dash_cycle );
+                        const rcsc::Vector2D & ball_vel,
+                        const int dash_cycle );
 
 };
 

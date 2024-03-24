@@ -5,3 +5,21 @@ sample_trainer
 start.sh
 train.sh
 
+# yano-team
+aclocal.m4
+conf*
+*.o
+*.rcg
+*.rcl
+*.Po
+out*
+traces*
+.dirstamp
+Makefile*
+COPYING
+INSTALL
+practice
+stamp-h1
+c_cpp_properties.json
+settings.json
+requests
